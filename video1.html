@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta content="" charset="utf-8" />
+		<title>Video to Ascii</title>
+	</head>
+
+	<body>
+		
+		<video id="video" controls="true">
+			<source src="example/2.mp4">
+			<source src="example/2.webm">
+		</video>
+
+		<div id="asciiOutput">test</div>
+				
+		<script>
+			var toAscii = (function(){			
+				function captureAndConvert() {
+
+					var fontSize = 4;
+					var aDefaultCharList = (" .X").split("");
+					// var aDefaultCharList = (" .:i1LC08").split("");
+					// var aDefaultCharList = (" .*:o&8#@").split("");					
+					// var aDefaultCharList = (" .,:;i1tfLCG08@").split("");
+					// var aDefaultCharList = (".'`^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$").split("");
+					// var aDefaultCharList = ("@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry%1v7l+it[]{ }?j|()=~!-/<>\"^_';,:`. ").split("").reverse();
+					// var aDefaultCharList = (" .:-=+*#%@").split("");
+					
+					var strFont = "courier new";
+					
+					var input = document.getElementsByTagName("video")[0];
+					
+					if(input.ended) return false;	
+								
+					var w = input.videoWidth;
+					var h = input.videoHeight;
+									
+					// var plainOutput = document.getElementById("plainOutput");
+				  var plainOutput = document.createElement('canvas');
+					plainOutput.width = w;
+					plainOutput.height = h;
+			
+					var ctx = plainOutput.getContext('2d');
+					
+					ctx.drawImage(input, 0, 0, w, h);
+
+					var aCharList = aDefaultCharList;
+
+					var fResolution = 1;
+
+					var iWidth = Math.round(parseInt(input.offsetWidth) * fResolution);
+					var iHeight = Math.round(parseInt(input.offsetHeight) * fResolution);
+		
+					var inputImageData = ctx.getImageData(0, 0, w, h).data;
+				
+					var strChars = "";
+					
+					for (var y=0;y<iHeight;y+=2) {
+						for (var x=0;x<iWidth;x++) {
+							var iOffset = (y*iWidth + x) * 4;
+					
+							var iRed = inputImageData[iOffset];
+							var iGreen = inputImageData[iOffset + 1];
+							var iBlue = inputImageData[iOffset + 2];
+							var iAlpha = inputImageData[iOffset + 3];
+					
+							if (iAlpha == 0) {
+								var iBrightIdx = 0;
+							} else {
+								var fBrightness = (0.3*iRed + 0.59*iGreen + 0.11*iBlue) / 255;
+								var iCharIdx = (aCharList.length-1) - Math.round(fBrightness * (aCharList.length-1));
+							}
+					
+							var strThisChar = aCharList[iCharIdx];
+					
+							if (strThisChar == " ") 
+								strThisChar = "&nbsp;";
+					
+							strChars += strThisChar;
+						}
+						strChars += "<br/>";
+					}
+
+
+					// can't get a span or div to flow like an img element, but a table works?
+					var oAscii = document.createElement("table");
+					oAscii.setAttribute("id", "asciiOutput");
+					oAscii.innerHTML = "<tr><td>" + strChars + "</td></tr>";
+					
+					oAscii.cellSpacing = 0;
+					oAscii.cellPadding = 0;
+					
+					var oStyle = oAscii.style;
+					oStyle.display = "inline";
+					oStyle.whiteSpace = "pre";
+					oStyle.margin = "0px";
+					oStyle.padding = "0px";
+					
+					oStyle.fontFamily = strFont;
+					oStyle.fontSize = fontSize + "px";
+					
+					var asciiOutput = document.getElementById("asciiOutput");					
+					asciiOutput.parentNode.replaceChild(oAscii, asciiOutput);
+				}
+							
+				return function() {						
+					captureAndConvert();	
+				}
+			})();
+
+
+			if (window.addEventListener) { 			
+				window.addEventListener("load", setInterval(function(){toAscii()},100), false); 
+			} else if (window.attachEvent) { 
+				window.attachEvent("onload", setInterval(function(){toAscii()},100)); 
+			}
+		</script>
+
+ </body>
+</html>
